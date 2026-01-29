@@ -108,36 +108,83 @@ if __name__ == "__main__" and False:  # Change False to True if you want CLI mod
 
 
 # ==============================
-# Tkinter GUI
+# Tkinter GUI with History
 # ==============================
+
 def evaluate_expression():
     expr = entry.get()
+
+    if not expr.strip():
+        return
+
     debug = debug_var.get()
     evaluator = ExpressionEvaluator(expr, debug=debug)
     result = evaluator.evaluate()
+
     result_label.config(text=f"Result: {result}")
+
+    # Save to history
+    history_list.insert(tk.END, f"{expr} = {result}")
+
+
+def clear_history():
+    history_list.delete(0, tk.END)
+
+
+def use_history(event):
+    selected = history_list.curselection()
+
+    if selected:
+        value = history_list.get(selected)
+        expression = value.split("=")[0].strip()
+        entry.delete(0, tk.END)
+        entry.insert(0, expression)
+
 
 # Create main window
 root = tk.Tk()
 root.title("Math Expression Evaluator")
 
-# Input field
+# Input
 tk.Label(root, text="Enter Expression:").grid(row=0, column=0, padx=5, pady=5)
+
 entry = tk.Entry(root, width=30)
 entry.grid(row=0, column=1, padx=5, pady=5)
 
-# Debug checkbox
+# Debug
 debug_var = tk.BooleanVar()
-debug_check = tk.Checkbutton(root, text="Show Debug", variable=debug_var)
-debug_check.grid(row=1, column=0, columnspan=2)
 
-# Evaluate button
-eval_button = tk.Button(root, text="Evaluate", command=evaluate_expression)
-eval_button.grid(row=2, column=0, columnspan=2, pady=5)
+tk.Checkbutton(
+    root,
+    text="Show Debug",
+    variable=debug_var
+).grid(row=1, column=0, columnspan=2)
 
-# Result display
+# Buttons
+tk.Button(
+    root,
+    text="Evaluate",
+    command=evaluate_expression
+).grid(row=2, column=0, columnspan=2, pady=5)
+
+
+tk.Button(
+    root,
+    text="Clear History",
+    command=clear_history
+).grid(row=3, column=0, columnspan=2, pady=3)
+
+# Result
 result_label = tk.Label(root, text="Result: ", font=("Arial", 14))
-result_label.grid(row=3, column=0, columnspan=2, pady=10)
+result_label.grid(row=4, column=0, columnspan=2, pady=10)
 
-# Run GUI
+# History Panel
+tk.Label(root, text="History").grid(row=0, column=2, padx=10)
+
+history_list = tk.Listbox(root, width=30, height=12)
+history_list.grid(row=1, column=2, rowspan=4, padx=10)
+
+history_list.bind("<<ListboxSelect>>", use_history)
+
+# Run app
 root.mainloop()

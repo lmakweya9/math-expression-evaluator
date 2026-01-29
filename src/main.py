@@ -32,7 +32,7 @@ class ExpressionEvaluator:
         clean = self.expression.replace(" ", "")
 
         # Regex for numbers and operators
-        pattern = r'\d+(\.\d+)?|[+*/()-]'
+        pattern = r'\d+(?:\.\d+)?|[+*/()-]'
 
         self.tokens = re.findall(pattern, clean)
 

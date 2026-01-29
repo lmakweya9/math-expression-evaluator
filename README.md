@@ -36,6 +36,24 @@ math-expression-evaluator/
 Requirements:
 Python 3.x
 
+### 📸 Debug Mode Demonstration
+
+### 1. Tokenization
+![Tokenization](screenshots/01_tokens.png)
+
+### 2. Parsing Parentheses
+![Parentheses](screenshots/02_parentheses.png)
+
+### 3. Operator Evaluation
+![Operations](screenshots/03_operations.png)
+
+### 4. Final Result
+![Result](screenshots/04_result.png)
+
+### 5. Error Handling (Optional)
+![Error](screenshots/05_error.png)
+
+
 ## Steps
 Clone the repository:
 git clone https://github.com/your-username/math-expression-evaluator.git

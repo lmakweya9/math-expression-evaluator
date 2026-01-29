@@ -1,190 +1,233 @@
-import re
 import tkinter as tk
+from tkinter import messagebox
+import math
 
-# ==============================
-# ExpressionEvaluator Class
-# ==============================
-class ExpressionEvaluator:
-    """
-    Evaluates mathematical expressions using recursive descent parsing.
-    Includes debug/teaching mode to show step-by-step evaluation.
-    """
+class MathEvaluator:
+    def __init__(self, master):
+        self.master = master
+        master.title("Math Expression Evaluator")
+        master.geometry("450x600")
 
-    def __init__(self, expression: str, debug: bool = False):
-        self.expression = expression
-        self.tokens = []
-        self.pos = 0
-        self.debug = debug   # Show step-by-step output if True
+        # ----------------------------
+        # Theme Settings
+        # ----------------------------
+        self.dark_mode = False
+        self.light_bg = "#f0f0f0"
+        self.light_fg = "#000000"
+        self.dark_bg = "#2e2e2e"
+        self.dark_fg = "#ffffff"
 
-    # ---------------- TOKENIZATION ----------------
-    def tokenize(self):
-        """
-        Convert the input string into tokens (numbers and operators)
-        Example: "3 + 4 * 2" -> ['3', '+', '4', '*', '2']
-        """
-        clean = self.expression.replace(" ", "")
-        pattern = r'\d+(?:\.\d+)?|[+*/()-]'
-        self.tokens = re.findall(pattern, clean)
+        # History and memory
+        self.history = []
+        self.history_index = None
+        self.memory = 0
 
-        # Validate all characters
-        if "".join(self.tokens) != clean:
-            raise ValueError("Invalid characters found")
+        # ----------------------------
+        # Input Field
+        # ----------------------------
+        self.entry = tk.Entry(master, font=("Arial", 16))
+        self.entry.pack(pady=10, fill=tk.X, padx=10)
+        self.entry.focus_set()
 
-        if self.debug:
-            print("Tokens:", self.tokens)
+        # Keyboard shortcuts
+        self.entry.bind("<Return>", self.calculate)
+        self.entry.bind("<Up>", self.history_up)
+        self.entry.bind("<Down>", self.history_down)
 
-    # ---------------- PARSER FUNCTIONS ----------------
-    def parse_expression(self):
-        """Handles addition and subtraction"""
-        result = self.parse_term()
-        while self.pos < len(self.tokens) and self.tokens[self.pos] in ("+", "-"):
-            operator = self.tokens[self.pos]
-            self.pos += 1
-            right = self.parse_term()
-            if self.debug:
-                print(f"Calculating: {result} {operator} {right}")
-            result = result + right if operator == "+" else result - right
-        return result
+        # ----------------------------
+        # Buttons Frame
+        # ----------------------------
+        self.button_frame = tk.Frame(master)
+        self.button_frame.pack(pady=5)
 
-    def parse_term(self):
-        """Handles multiplication and division"""
-        result = self.parse_factor()
-        while self.pos < len(self.tokens) and self.tokens[self.pos] in ("*", "/"):
-            operator = self.tokens[self.pos]
-            self.pos += 1
-            right = self.parse_factor()
-            if self.debug:
-                print(f"Calculating: {result} {operator} {right}")
-            if operator == "*":
-                result *= right
-            else:
-                if right == 0:
-                    raise ValueError("Division by zero")
-                result /= right
-        return result
+        # Memory buttons
+        mem_buttons = [("M+", self.memory_add), ("M-", self.memory_subtract),
+                       ("MR", self.memory_recall), ("MC", self.memory_clear)]
+        for text, cmd in mem_buttons:
+            tk.Button(self.button_frame, text=text, width=5, command=cmd).pack(side=tk.LEFT, padx=2)
 
-    def parse_factor(self):
-        """Handles numbers and parentheses"""
-        token = self.tokens[self.pos]
-        self.pos += 1
+        # Function buttons
+        func_buttons = ["sqrt", "log", "sin", "cos", "tan"]
+        for func in func_buttons:
+            tk.Button(self.button_frame, text=func, width=5,
+                      command=lambda f=func: self.insert_function(f)).pack(side=tk.LEFT, padx=2)
 
-        if token == "(":
-            if self.debug:
-                print("Opening bracket found")
-            result = self.parse_expression()
-            if self.tokens[self.pos] != ")":
-                raise ValueError("Missing closing bracket")
-            self.pos += 1
-            if self.debug:
-                print("Closing bracket found")
-            return result
+        # Calculate button
+        self.calc_button = tk.Button(master, text="Calculate", command=self.calculate)
+        self.calc_button.pack(pady=5)
 
-        if self.debug:
-            print("Number found:", token)
+        # ----------------------------
+        # Extra Buttons Frame: Theme + History
+        # ----------------------------
+        self.extra_button_frame = tk.Frame(master)
+        self.extra_button_frame.pack(pady=5)
 
-        return float(token)
+        # Dark/Light Mode toggle
+        self.theme_button = tk.Button(self.extra_button_frame, text="Toggle Dark Mode", command=self.toggle_theme)
+        self.theme_button.pack(side=tk.LEFT, padx=5)
 
-    # ---------------- MAIN EVALUATION ----------------
-    def evaluate(self):
-        """Run tokenization, parsing, and return result"""
+        # Show/Hide History
+        self.show_history = True
+        self.history_toggle_button = tk.Button(self.extra_button_frame, text="Hide History", command=self.toggle_history)
+        self.history_toggle_button.pack(side=tk.LEFT, padx=5)
+
+        # Clear History
+        self.clear_history_button = tk.Button(self.extra_button_frame, text="Clear History", command=self.clear_history)
+        self.clear_history_button.pack(side=tk.LEFT, padx=5)
+
+        # History Listbox
+        self.listbox = tk.Listbox(master, font=("Arial", 14))
+        self.listbox.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+        self.listbox.bind("<Double-1>", self.copy_result)
+
+        # Apply initial theme
+        self.apply_theme()
+
+    # ----------------------------
+    # Theme Functions
+    # ----------------------------
+    def toggle_theme(self):
+        self.dark_mode = not self.dark_mode
+        self.apply_theme()
+
+    def apply_theme(self):
+        bg = self.dark_bg if self.dark_mode else self.light_bg
+        fg = self.dark_fg if self.dark_mode else self.light_fg
+
+        self.master.configure(bg=bg)
+        self.entry.configure(bg=bg, fg=fg, insertbackground=fg)
+        self.listbox.configure(bg=bg, fg=fg)
+        self.button_frame.configure(bg=bg)
+        self.extra_button_frame.configure(bg=bg)
+        self.calc_button.configure(bg=bg, fg=fg)
+        self.theme_button.configure(bg=bg, fg=fg)
+        self.history_toggle_button.configure(bg=bg, fg=fg)
+        self.clear_history_button.configure(bg=bg, fg=fg)
+        for child in self.button_frame.winfo_children():
+            child.configure(bg=bg, fg=fg)
+
+    # ----------------------------
+    # Toggle History visibility
+    # ----------------------------
+    def toggle_history(self):
+        if self.show_history:
+            self.listbox.pack_forget()
+            self.history_toggle_button.config(text="Show History")
+            self.show_history = False
+        else:
+            self.listbox.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+            self.history_toggle_button.config(text="Hide History")
+            self.show_history = True
+
+    # ----------------------------
+    # Clear History
+    # ----------------------------
+    def clear_history(self):
+        self.listbox.delete(0, tk.END)
+        self.history.clear()
+        self.history_index = None
+
+    # ----------------------------
+    # Evaluate Expression
+    # ----------------------------
+    def evaluate_expression(self, expr):
         try:
-            self.tokenize()
-            result = self.parse_expression()
-            if self.pos < len(self.tokens):
-                raise ValueError("Unexpected input")
-            return str(int(result)) if result == int(result) else str(round(result, 2))
+            allowed_funcs = {"sqrt": math.sqrt, "log": math.log,
+                             "sin": math.sin, "cos": math.cos, "tan": math.tan}
+            result = eval(expr, {"__builtins__": None}, allowed_funcs)
+            return result
         except Exception as e:
-            return f"Invalid Expression: {e}"
+            return f"Error: {str(e)}"
 
+    # ----------------------------
+    # Calculate Expression
+    # ----------------------------
+    def calculate(self, event=None):
+        expr = self.entry.get()
+        if not expr.strip():
+            return
+        result = self.evaluate_expression(expr)
+        display_text = f"{expr} = {result}"
+        self.history.append(display_text)
+        if self.show_history:
+            self.listbox.insert(tk.END, display_text)
+        self.history_index = None
+        self.entry.delete(0, tk.END)
 
-# ==============================
-# CLI TEST (Optional)
-# ==============================
-if __name__ == "__main__" and False:  # Change False to True if you want CLI mode
-    test_expr = "(3 + 3) * 42 / (6 + 1)"
-    calc = ExpressionEvaluator(test_expr, debug=True)
-    print("Expression:", test_expr)
-    print("Result:", calc.evaluate())
+    # ----------------------------
+    # History Navigation
+    # ----------------------------
+    def history_up(self, event):
+        if not self.history:
+            return
+        if self.history_index is None:
+            self.history_index = len(self.history) - 1
+        else:
+            self.history_index = max(0, self.history_index - 1)
+        expr = self.history[self.history_index].split('=')[0].strip()
+        self.entry.delete(0, tk.END)
+        self.entry.insert(0, expr)
 
+    def history_down(self, event):
+        if not self.history or self.history_index is None:
+            return
+        self.history_index = min(len(self.history) - 1, self.history_index + 1)
+        expr = self.history[self.history_index].split('=')[0].strip()
+        self.entry.delete(0, tk.END)
+        self.entry.insert(0, expr)
 
-# ==============================
-# Tkinter GUI with History
-# ==============================
+    # ----------------------------
+    # Copy Result
+    # ----------------------------
+    def copy_result(self, event):
+        try:
+            selected = self.listbox.get(self.listbox.curselection())
+            result = selected.split('=')[1].strip()
+            self.master.clipboard_clear()
+            self.master.clipboard_append(result)
+            messagebox.showinfo("Copied", f"Result {result} copied to clipboard!")
+        except Exception:
+            messagebox.showwarning("Error", "No result selected")
 
-def evaluate_expression():
-    expr = entry.get()
+    # ----------------------------
+    # Memory Functions
+    # ----------------------------
+    def memory_add(self):
+        try:
+            val = float(self.entry.get())
+            self.memory += val
+            messagebox.showinfo("Memory", f"Added {val} to memory. Memory = {self.memory}")
+        except:
+            messagebox.showwarning("Error", "Invalid input")
 
-    if not expr.strip():
-        return
+    def memory_subtract(self):
+        try:
+            val = float(self.entry.get())
+            self.memory -= val
+            messagebox.showinfo("Memory", f"Subtracted {val} from memory. Memory = {self.memory}")
+        except:
+            messagebox.showwarning("Error", "Invalid input")
 
-    debug = debug_var.get()
-    evaluator = ExpressionEvaluator(expr, debug=debug)
-    result = evaluator.evaluate()
+    def memory_recall(self):
+        self.entry.delete(0, tk.END)
+        self.entry.insert(0, str(self.memory))
 
-    result_label.config(text=f"Result: {result}")
+    def memory_clear(self):
+        self.memory = 0
+        messagebox.showinfo("Memory", "Memory cleared.")
 
-    # Save to history
-    history_list.insert(tk.END, f"{expr} = {result}")
+    # ----------------------------
+    # Function Buttons
+    # ----------------------------
+    def insert_function(self, func_name):
+        current = self.entry.get()
+        self.entry.delete(0, tk.END)
+        self.entry.insert(0, f"{current}{func_name}(")
 
-
-def clear_history():
-    history_list.delete(0, tk.END)
-
-
-def use_history(event):
-    selected = history_list.curselection()
-
-    if selected:
-        value = history_list.get(selected)
-        expression = value.split("=")[0].strip()
-        entry.delete(0, tk.END)
-        entry.insert(0, expression)
-
-
-# Create main window
-root = tk.Tk()
-root.title("Math Expression Evaluator")
-
-# Input
-tk.Label(root, text="Enter Expression:").grid(row=0, column=0, padx=5, pady=5)
-
-entry = tk.Entry(root, width=30)
-entry.grid(row=0, column=1, padx=5, pady=5)
-
-# Debug
-debug_var = tk.BooleanVar()
-
-tk.Checkbutton(
-    root,
-    text="Show Debug",
-    variable=debug_var
-).grid(row=1, column=0, columnspan=2)
-
-# Buttons
-tk.Button(
-    root,
-    text="Evaluate",
-    command=evaluate_expression
-).grid(row=2, column=0, columnspan=2, pady=5)
-
-
-tk.Button(
-    root,
-    text="Clear History",
-    command=clear_history
-).grid(row=3, column=0, columnspan=2, pady=3)
-
-# Result
-result_label = tk.Label(root, text="Result: ", font=("Arial", 14))
-result_label.grid(row=4, column=0, columnspan=2, pady=10)
-
-# History Panel
-tk.Label(root, text="History").grid(row=0, column=2, padx=10)
-
-history_list = tk.Listbox(root, width=30, height=12)
-history_list.grid(row=1, column=2, rowspan=4, padx=10)
-
-history_list.bind("<<ListboxSelect>>", use_history)
-
-# Run app
-root.mainloop()
+# ----------------------------
+# Run GUI
+# ----------------------------
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = MathEvaluator(root)
+    root.mainloop()

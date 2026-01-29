@@ -25,12 +25,6 @@ Handle errors gracefully
 Write clean and structured code
 Think like a problem solver
 
-## 📂 Project Structure
-math-expression-evaluator/
-│
-├── main.py          # Main program
-├── evaluator.py     # Expression evaluator logic
-├── README.md        # Documentation
 
 ## ▶️ How to Run the Program
 Requirements:
@@ -74,91 +68,68 @@ Result: 36
 
 This project includes a simple graphical user interface built with Tkinter, allowing users to evaluate mathematical expressions without using the command line.
 
-## ✨ Features
-User-friendly input field
-One-click evaluation
-Optional debug/teaching mode
-Real-time result display
-Error handling for invalid expressions
+## Features
 
-## 📸 Screenshots
+### ✅ Core Features
+- Evaluate expressions with `+`, `-`, `*`, `/`, `^` and parentheses.
+- Correct **order of operations** (PEMDAS/BODMAS).
+- Scrollable **history of previous calculations**.
+- Click on a result in history to **copy it to clipboard**.
+- Clear input and history buttons.
 
-Below are examples of the application in use:
-## 1️⃣ Main Interface
-Shows the clean interface when the application is launched.
-📁 screenshots/gui_home.png
+### ⚡ Intermediate Features
+- **Keyboard shortcuts**:
+  - `Enter` → Calculate expression.
+  - `Up/Down arrows` → Navigate through previous expressions.
+- **Memory functions**:
+  - `M+` → Add current entry to memory.
+  - `M-` → Subtract from memory.
+  - `MR` → Recall memory.
+  - `MC` → Clear memory.
+- **Basic math functions**:
+  - `sqrt()`, `log()`, `sin()`, `cos()`, `tan()`.
+  - Accessible via buttons or manual input.
 
-## 2️⃣ Expression Evaluation
-Demonstrates evaluating a valid mathematical expression.
-📁 screenshots/gui_result.png
+### 🎨 Planned / Optional Features
+- Dark/Light mode toggle.
+- Advanced math plotting (functions like `y=sin(x)`).
+- Export history to `.txt` or `.csv`.
+- Responsive layout for mobile use.
 
-## 3️⃣ Debug / Teaching Mode
-Displays step-by-step parsing and evaluation output.
-📁 screenshots/gui_debug.png
+---
 
-## ▶️ How to Run the GUI
-Make sure Python is installed, then run:
-python main.py
-The window will open automatically.
+### Demo
 
-## 🧠 Learning Purpose
-This GUI was designed to support learning by:
-Visualizing how expressions are evaluated
-Demonstrating recursive descent parsing
-Providing optional debugging output
-Helping beginners understand interpreters
-It is suitable for students, tutors, and coding facilitators.
+#### Light / Dark Mode
+- Toggle button switches between light and dark themes instantly.
 
-## 🧠 How It Works (Simplified Explanation)
-The program follows three main steps:
-## 1️⃣ Tokenization
-The input expression is converted into smaller parts called tokens.
+#### Memory Functions
+1. M+ / M- → add/subtract value to memory
+2. MR → recall memory
+3. MC → clear memory
 
-Example:
+#### History
+- Show/Hide History → hides or shows the history list.
+- Clear History → clears all previous calculations.
+- Double-click a history item → copies the result to clipboard.
 
-"3 + 4 * 2"
+#### Basic Math Functions
+- Buttons: sqrt(), log(), sin(), cos(), tan()
+- Type function, input number, hit Calculate → see result.
 
+**Screenshots / GIF Examples**
+![Light Mode](screenshots/light_mode.png)
+![Dark Mode](screenshots/dark_mode.png)
+![Memory + History](screenshots/memory_history.png)
+![Basic Math Functions](screenshots/basic_math.png)
 
-Becomes:
-
-['3', '+', '4', '*', '2']
-
-
-This makes the expression easier to process.
-
-## 2️⃣ Parsing
-The parser reads tokens using recursive functions:
-Function	        Purpose
-parse_expression	Handles + and -
-parse_term	        Handles * and /
-parse_factor	    Handles numbers and brackets
-
-This ensures the correct order of operations is followed.
-
-## 3️⃣ Evaluation
-Each part of the expression is calculated step by step until a final result is produced.
-Errors are caught and displayed clearly if the expression is invalid.
-
-## ⚠️ Error Handling
-The program checks for:
-Invalid characters
-Incorrect brackets
-Unexpected tokens
-Division by zero
-If an error is found, a helpful message is returned.
-
-## 🚀 Technologies Used
-Python 3
-Tkinter (GUI)
-Regular Expressions (Tokenization)
-Recursive Descent Parsing
-
-## 📈 Future Improvements
-Dark mode support
-Expression history
-Keyboard shortcuts
-Scientific calculator mode
-Mobile-friendly interface
+*Optional:* A short GIF showing:
+1. Toggle Dark/Light mode  
+2. Type expression → Calculate  
+3. Use memory buttons  
+4. Show/hide history  
+5. Double-click copy result  
+6. Use function buttons
 
 ## 💬 Why This Project?
 

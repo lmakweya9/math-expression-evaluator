@@ -70,6 +70,45 @@ Input
 Output
 Result: 36
 
+## 🖥️ GUI Demo (Tkinter Interface)
+
+This project includes a simple graphical user interface built with Tkinter, allowing users to evaluate mathematical expressions without using the command line.
+
+## ✨ Features
+User-friendly input field
+One-click evaluation
+Optional debug/teaching mode
+Real-time result display
+Error handling for invalid expressions
+
+## 📸 Screenshots
+
+Below are examples of the application in use:
+## 1️⃣ Main Interface
+Shows the clean interface when the application is launched.
+📁 screenshots/gui_home.png
+
+## 2️⃣ Expression Evaluation
+Demonstrates evaluating a valid mathematical expression.
+📁 screenshots/gui_result.png
+
+## 3️⃣ Debug / Teaching Mode
+Displays step-by-step parsing and evaluation output.
+📁 screenshots/gui_debug.png
+
+## ▶️ How to Run the GUI
+Make sure Python is installed, then run:
+python main.py
+The window will open automatically.
+
+## 🧠 Learning Purpose
+This GUI was designed to support learning by:
+Visualizing how expressions are evaluated
+Demonstrating recursive descent parsing
+Providing optional debugging output
+Helping beginners understand interpreters
+It is suitable for students, tutors, and coding facilitators.
+
 ## 🧠 How It Works (Simplified Explanation)
 The program follows three main steps:
 ## 1️⃣ Tokenization
@@ -108,14 +147,18 @@ Unexpected tokens
 Division by zero
 If an error is found, a helpful message is returned.
 
-## 🌱 Possible Improvements
+## 🚀 Technologies Used
+Python 3
+Tkinter (GUI)
+Regular Expressions (Tokenization)
+Recursive Descent Parsing
 
-Future versions may include:
-Support for exponents (^)
-Step-by-step visual output
-Graphical user interface (GUI)
-User input from terminal
-Debug/learning mode
+## 📈 Future Improvements
+Dark mode support
+Expression history
+Keyboard shortcuts
+Scientific calculator mode
+Mobile-friendly interface
 
 ## 💬 Why This Project?
 

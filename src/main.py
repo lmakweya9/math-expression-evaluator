@@ -1,12 +1,12 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 import math
 
 class MathEvaluator:
     def __init__(self, master):
         self.master = master
         master.title("Math Expression Evaluator")
-        master.geometry("450x600")
+        master.geometry("500x650")
 
         # ----------------------------
         # Theme Settings
@@ -17,10 +17,14 @@ class MathEvaluator:
         self.dark_bg = "#2e2e2e"
         self.dark_fg = "#ffffff"
 
-        # History and memory
+        # ----------------------------
+        # History, Memory, Undo/Redo
+        # ----------------------------
         self.history = []
         self.history_index = None
         self.memory = 0
+        self.undo_stack = []
+        self.redo_stack = []
 
         # ----------------------------
         # Input Field
@@ -33,54 +37,58 @@ class MathEvaluator:
         self.entry.bind("<Return>", self.calculate)
         self.entry.bind("<Up>", self.history_up)
         self.entry.bind("<Down>", self.history_down)
+        self.entry.bind("<Control-z>", self.undo)
+        self.entry.bind("<Control-y>", self.redo)
+        self.entry.bind("<KeyRelease>", self.on_entry_change)
 
         # ----------------------------
-        # Buttons Frame
+        # Buttons Frame: Memory & Functions
         # ----------------------------
         self.button_frame = tk.Frame(master)
         self.button_frame.pack(pady=5)
 
-        # Memory buttons
         mem_buttons = [("M+", self.memory_add), ("M-", self.memory_subtract),
                        ("MR", self.memory_recall), ("MC", self.memory_clear)]
         for text, cmd in mem_buttons:
             tk.Button(self.button_frame, text=text, width=5, command=cmd).pack(side=tk.LEFT, padx=2)
 
-        # Function buttons
-        func_buttons = ["sqrt", "log", "sin", "cos", "tan"]
+        func_buttons = ["sqrt", "log", "sin", "cos", "tan", "factorial", "pi", "e"]
         for func in func_buttons:
-            tk.Button(self.button_frame, text=func, width=5,
+            tk.Button(self.button_frame, text=func, width=6,
                       command=lambda f=func: self.insert_function(f)).pack(side=tk.LEFT, padx=2)
 
-        # Calculate button
+        # ----------------------------
+        # Calculate + Export Button
+        # ----------------------------
         self.calc_button = tk.Button(master, text="Calculate", command=self.calculate)
         self.calc_button.pack(pady=5)
 
+        self.export_button = tk.Button(master, text="Export History", command=self.export_history)
+        self.export_button.pack(pady=5)
+
         # ----------------------------
-        # Extra Buttons Frame: Theme + History
+        # Extra Buttons: Theme & History
         # ----------------------------
         self.extra_button_frame = tk.Frame(master)
         self.extra_button_frame.pack(pady=5)
 
-        # Dark/Light Mode toggle
         self.theme_button = tk.Button(self.extra_button_frame, text="Toggle Dark Mode", command=self.toggle_theme)
         self.theme_button.pack(side=tk.LEFT, padx=5)
 
-        # Show/Hide History
         self.show_history = True
         self.history_toggle_button = tk.Button(self.extra_button_frame, text="Hide History", command=self.toggle_history)
         self.history_toggle_button.pack(side=tk.LEFT, padx=5)
 
-        # Clear History
         self.clear_history_button = tk.Button(self.extra_button_frame, text="Clear History", command=self.clear_history)
         self.clear_history_button.pack(side=tk.LEFT, padx=5)
 
+        # ----------------------------
         # History Listbox
+        # ----------------------------
         self.listbox = tk.Listbox(master, font=("Arial", 14))
         self.listbox.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
         self.listbox.bind("<Double-1>", self.copy_result)
 
-        # Apply initial theme
         self.apply_theme()
 
     # ----------------------------
@@ -100,6 +108,7 @@ class MathEvaluator:
         self.button_frame.configure(bg=bg)
         self.extra_button_frame.configure(bg=bg)
         self.calc_button.configure(bg=bg, fg=fg)
+        self.export_button.configure(bg=bg, fg=fg)
         self.theme_button.configure(bg=bg, fg=fg)
         self.history_toggle_button.configure(bg=bg, fg=fg)
         self.clear_history_button.configure(bg=bg, fg=fg)
@@ -107,7 +116,7 @@ class MathEvaluator:
             child.configure(bg=bg, fg=fg)
 
     # ----------------------------
-    # Toggle History visibility
+    # History Visibility
     # ----------------------------
     def toggle_history(self):
         if self.show_history:
@@ -119,29 +128,48 @@ class MathEvaluator:
             self.history_toggle_button.config(text="Hide History")
             self.show_history = True
 
-    # ----------------------------
-    # Clear History
-    # ----------------------------
     def clear_history(self):
         self.listbox.delete(0, tk.END)
         self.history.clear()
         self.history_index = None
 
     # ----------------------------
+    # Undo/Redo
+    # ----------------------------
+    def on_entry_change(self, event):
+        # Save current entry to undo stack
+        if event.keysym not in ["Up", "Down", "Return"]:
+            self.undo_stack.append(self.entry.get())
+
+    def undo(self, event=None):
+        if self.undo_stack:
+            last = self.undo_stack.pop()
+            self.redo_stack.append(self.entry.get())
+            self.entry.delete(0, tk.END)
+            self.entry.insert(0, last)
+
+    def redo(self, event=None):
+        if self.redo_stack:
+            last = self.redo_stack.pop()
+            self.undo_stack.append(self.entry.get())
+            self.entry.delete(0, tk.END)
+            self.entry.insert(0, last)
+
+    # ----------------------------
     # Evaluate Expression
     # ----------------------------
     def evaluate_expression(self, expr):
+        allowed_funcs = {
+            "sqrt": math.sqrt, "log": math.log,
+            "sin": math.sin, "cos": math.cos, "tan": math.tan,
+            "factorial": math.factorial, "pi": math.pi, "e": math.e
+        }
         try:
-            allowed_funcs = {"sqrt": math.sqrt, "log": math.log,
-                             "sin": math.sin, "cos": math.cos, "tan": math.tan}
             result = eval(expr, {"__builtins__": None}, allowed_funcs)
             return result
         except Exception as e:
             return f"Error: {str(e)}"
 
-    # ----------------------------
-    # Calculate Expression
-    # ----------------------------
     def calculate(self, event=None):
         expr = self.entry.get()
         if not expr.strip():
@@ -217,12 +245,31 @@ class MathEvaluator:
         messagebox.showinfo("Memory", "Memory cleared.")
 
     # ----------------------------
-    # Function Buttons
+    # Insert Function Buttons
     # ----------------------------
     def insert_function(self, func_name):
         current = self.entry.get()
         self.entry.delete(0, tk.END)
-        self.entry.insert(0, f"{current}{func_name}(")
+        if func_name in ["pi", "e"]:
+            self.entry.insert(0, f"{current}{func_name}")
+        else:
+            self.entry.insert(0, f"{current}{func_name}(")
+
+    # ----------------------------
+    # Export History
+    # ----------------------------
+    def export_history(self):
+        if not self.history:
+            messagebox.showwarning("No History", "Nothing to export!")
+            return
+        file_path = filedialog.asksaveasfilename(defaultextension=".txt",
+                                                 filetypes=[("Text files","*.txt"),("All files","*.*")])
+        if file_path:
+            with open(file_path, "w") as f:
+                for entry in self.history:
+                    f.write(f"{entry}\n")
+            messagebox.showinfo("Exported", f"History saved to {file_path}")
+
 
 # ----------------------------
 # Run GUI

@@ -6,7 +6,7 @@ class MathEvaluator:
     def __init__(self, master):
         self.master = master
         master.title("Math Expression Evaluator")
-        master.geometry("500x650")
+        master.geometry("560x780")
 
         # ----------------------------
         # Theme Settings
@@ -42,29 +42,84 @@ class MathEvaluator:
         self.entry.bind("<KeyRelease>", self.on_entry_change)
 
         # ----------------------------
-        # Buttons Frame: Memory & Functions
+        # Memory + Function Buttons Frame
         # ----------------------------
         self.button_frame = tk.Frame(master)
-        self.button_frame.pack(pady=5)
+        self.button_frame.pack(pady=8)
 
-        mem_buttons = [("M+", self.memory_add), ("M-", self.memory_subtract),
-                       ("MR", self.memory_recall), ("MC", self.memory_clear)]
-        for text, cmd in mem_buttons:
-            tk.Button(self.button_frame, text=text, width=5, command=cmd).pack(side=tk.LEFT, padx=2)
+        # Memory buttons
+        mem_buttons = {
+            "M+": self.memory_add,
+            "M-": self.memory_subtract,
+            "MR": self.memory_recall,
+            "MC": self.memory_clear
+        }
 
-        func_buttons = ["sqrt", "log", "sin", "cos", "tan", "factorial", "pi", "e"]
-        for func in func_buttons:
-            tk.Button(self.button_frame, text=func, width=6,
-                      command=lambda f=func: self.insert_function(f)).pack(side=tk.LEFT, padx=2)
+        for i, (text, func) in enumerate(mem_buttons.items()):
+            tk.Button(
+                self.button_frame,
+                text=text,
+                width=6,
+                height=2,
+                font=("Segoe UI", 10),
+                command=func
+            ).grid(row=0, column=i, padx=4, pady=4)
+
+        # Function buttons (2 rows)
+        func_buttons = [
+            ["sqrt", "log", "sin", "cos"],
+            ["tan", "fact", "pi", "e"]
+        ]
+
+        for r, row in enumerate(func_buttons, start=1):
+            for c, func in enumerate(row):
+                real_func = "factorial" if func == "fact" else func
+                tk.Button(
+                    self.button_frame,
+                    text=func,
+                    width=6,
+                    height=2,
+                    font=("Segoe UI", 10),
+                    command=lambda f=real_func: self.insert_function(f)
+                ).grid(row=r, column=c, padx=4, pady=4)
 
         # ----------------------------
-        # Calculate + Export Button
+        # Calculate + Export Buttons
         # ----------------------------
-        self.calc_button = tk.Button(master, text="Calculate", command=self.calculate)
+        self.calc_button = tk.Button(master, text="Calculate", width=20, command=self.calculate)
         self.calc_button.pack(pady=5)
 
-        self.export_button = tk.Button(master, text="Export History", command=self.export_history)
+        self.export_button = tk.Button(master, text="Export History", width=20, command=self.export_history)
         self.export_button.pack(pady=5)
+
+        # ----------------------------
+        # Keypad Frame
+        # ----------------------------
+        self.keypad_frame = tk.Frame(master)
+        self.keypad_frame.pack(pady=10)
+
+        buttons = [
+            ['7', '8', '9', '/'],
+            ['4', '5', '6', '*'],
+            ['1', '2', '3', '-'],
+            ['0', '.', '=', '+'],
+            ['(', ')', 'C']
+        ]
+
+        for r, row in enumerate(buttons):
+            for c, btn in enumerate(row):
+                tk.Button(
+                    self.keypad_frame,
+                    text=btn,
+                    width=6,
+                    height=2,
+                    font=("Arial", 12),
+                    command=lambda b=btn: self.on_keypad_click(b)
+                ).grid(row=r, column=c, padx=2, pady=2, sticky="nsew")
+
+        # Make columns expand evenly
+        for i in range(4):
+            self.keypad_frame.grid_columnconfigure(i, weight=1)
 
         # ----------------------------
         # Extra Buttons: Theme & History
@@ -85,11 +140,8 @@ class MathEvaluator:
         # ----------------------------
         # History Listbox
         # ----------------------------
-        self.listbox = tk.Listbox(master, font=("Arial", 14))
-        self.listbox.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
-        self.listbox.bind("<Double-1>", self.copy_result)
-
-        self.apply_theme()
+        self.listbox = tk.Listbox(master, font=("Arial", 12), height=8)
+        self.listbox.pack(padx=10, pady=10, fill=tk.X)
 
     # ----------------------------
     # Theme Functions
@@ -112,8 +164,13 @@ class MathEvaluator:
         self.theme_button.configure(bg=bg, fg=fg)
         self.history_toggle_button.configure(bg=bg, fg=fg)
         self.clear_history_button.configure(bg=bg, fg=fg)
+
         for child in self.button_frame.winfo_children():
             child.configure(bg=bg, fg=fg)
+        for row in self.keypad_frame.winfo_children():
+            row.configure(bg=bg)
+            for btn in row.winfo_children():
+                btn.configure(bg=bg, fg=fg)
 
     # ----------------------------
     # History Visibility
@@ -124,7 +181,7 @@ class MathEvaluator:
             self.history_toggle_button.config(text="Show History")
             self.show_history = False
         else:
-            self.listbox.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+            self.listbox.pack(padx=10, pady=10, fill=tk.X)
             self.history_toggle_button.config(text="Hide History")
             self.show_history = True
 
@@ -137,7 +194,6 @@ class MathEvaluator:
     # Undo/Redo
     # ----------------------------
     def on_entry_change(self, event):
-        # Save current entry to undo stack
         if event.keysym not in ["Up", "Down", "Return"]:
             self.undo_stack.append(self.entry.get())
 
@@ -174,14 +230,50 @@ class MathEvaluator:
         expr = self.entry.get()
         if not expr.strip():
             return
+        
+        
+        # --- Run validation ---
+        valid, message = self.validate_expression(expr)
+        if not valid:
+            messagebox.showwarning("Invalid Expression", message)
+            return
+        
+        # --- Replace ^ with ** ---
+        expr = expr.replace("^", "**")
+
+
+        # --- Existing evaluation ---
         result = self.evaluate_expression(expr)
-        display_text = f"{expr} = {result}"
+        display_text = f"{expr.replace('**', '^')} = {result}" # Show ^ to user
         self.history.append(display_text)
         if self.show_history:
             self.listbox.insert(tk.END, display_text)
         self.history_index = None
         self.entry.delete(0, tk.END)
 
+    def validate_expression(self, expr):
+        allowed_chars = "0123456789+-*/().^ "
+        allowed_funcs = ["sqrt", "log", "sin", "cos", "tan", "factorial", "pi", "e"]
+
+       # 1️⃣ Parentheses check
+        if expr.count('(') != expr.count(')'):
+            return False, "Mismatched parentheses"
+
+        # 2️⃣ Only allowed characters and functions
+        temp_expr = expr
+        for func in allowed_funcs:
+            temp_expr = temp_expr.replace(func, "")
+        for ch in temp_expr:
+            if ch not in allowed_chars:
+                return False, f"Invalid character: '{ch}'"
+
+        # 3️⃣ Check consecutive operators
+        import re
+        if re.search(r"[+\-*/]{2,}", expr):
+            return False, "Consecutive operators found"
+
+        return True, ""
+    
     # ----------------------------
     # History Navigation
     # ----------------------------
@@ -205,19 +297,6 @@ class MathEvaluator:
         self.entry.insert(0, expr)
 
     # ----------------------------
-    # Copy Result
-    # ----------------------------
-    def copy_result(self, event):
-        try:
-            selected = self.listbox.get(self.listbox.curselection())
-            result = selected.split('=')[1].strip()
-            self.master.clipboard_clear()
-            self.master.clipboard_append(result)
-            messagebox.showinfo("Copied", f"Result {result} copied to clipboard!")
-        except Exception:
-            messagebox.showwarning("Error", "No result selected")
-
-    # ----------------------------
     # Memory Functions
     # ----------------------------
     def memory_add(self):
@@ -238,7 +317,11 @@ class MathEvaluator:
 
     def memory_recall(self):
         self.entry.delete(0, tk.END)
-        self.entry.insert(0, str(self.memory))
+        # --- Show integer only if whole number
+        if self.memory == int(self.memory):
+            self.entry.insert(0, str(int(self.memory)))
+        else:
+            self.entry.insert(0, str(self.memory))
 
     def memory_clear(self):
         self.memory = 0
@@ -269,6 +352,17 @@ class MathEvaluator:
                 for entry in self.history:
                     f.write(f"{entry}\n")
             messagebox.showinfo("Exported", f"History saved to {file_path}")
+
+    # ----------------------------
+    # Keypad Logic
+    # ----------------------------
+    def on_keypad_click(self, key):
+        if key == "=":
+            self.calculate()
+        elif key == "C":
+            self.entry.delete(0, tk.END)
+        else:
+            self.entry.insert(tk.END, key)
 
 
 # ----------------------------

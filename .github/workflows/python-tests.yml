@@ -22,4 +22,4 @@ jobs:
 
     - name: Run Tests
       run: |
-        python -m unittest test_main.py
+        python -m unittest discover -s tests

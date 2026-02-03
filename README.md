@@ -2,7 +2,7 @@
 
 A **modern, feature-rich scientific calculator** built with Python and Tkinter. This project demonstrates clean architecture by separating math logic (Engine) from the interface (GUI), robust error handling, and CI/CD integration.
 
-![Calculator Screenshot](screenshots/demo1.png) 
+![Calculator Screenshot](screenshots/demo1.gif) 
 
 ---
 

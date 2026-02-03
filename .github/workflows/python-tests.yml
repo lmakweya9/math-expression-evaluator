@@ -22,4 +22,6 @@ jobs:
 
     - name: Run Tests
       run: |
-        python -m unittest discover -s tests
+        # -s tells it to start in the current directory
+        # -p tells it to look for any file starting with 'test_'
+        python3 -m unittest discover -s . -p 'test_*.py'

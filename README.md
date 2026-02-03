@@ -41,10 +41,12 @@ A **modern, feature-rich scientific calculator** built with Python and Tkinter. 
     python -m unittest discover tests
 
 ## 📂 Project Structure
+
 calculator/
-├── src/
+├── .github/workflows/   # CI/CD configuration (GitHub Actions)
+├── src/                 # Source code
 │   └── main.py          # Logic Engine and GUI classes
-├── tests/
-│   └── test_main.py     # Unit test suite
-├── .github/workflows/   # CI/CD configuration
-└── .gitignore           # Keeps the repo clean
+├── tests/               # Automated test suite
+│   └── test_main.py     # Unit tests for math logic
+├── .gitignore           # Files to exclude from Git
+├── README.md            # Project documentation

@@ -1,36 +1,50 @@
-# Advanced Python Calculator
+# 🧮 Advanced Python Calculator
 
-A **feature-rich calculator** built with Python and Tkinter, designed to demonstrate GUI development, expression evaluation, and state management. Perfect for showcasing programming skills in Python for portfolios.
+A **modern, feature-rich scientific calculator** built with Python and Tkinter. This project demonstrates clean architecture by separating math logic (Engine) from the interface (GUI), robust error handling, and CI/CD integration.
 
-![Calculator Demo](demo.gif) <!-- Replace demo.gif with your actual GIF file name -->
-
----
-
-## Features
-
-- **Calculation History**: Keep track of all past calculations in a scrollable list. Double-click any history entry to re-run it.
-- **Variable Storage**: Store variables (e.g., `x = 5`) and reuse them in expressions.
-- **Error Handling**: Friendly popups for invalid expressions instead of crashing.
-- **Clear History**: Quickly reset your calculation history.
-- **Interactive GUI**: Built with Tkinter for a clean and intuitive interface.
+![Calculator Screenshot](screenshots/demo1.png) 
 
 ---
 
-## Getting Started
+## ✨ Features
+
+- **Modern Dark UI**: A sleek "Deep Charcoal & Emerald" theme with a flat design.
+- **Calculation History**: Displays the previous operation above the result for better context.
+- **Scientific Functions**: Supports powers (`^`), factorials (`!`), square roots (`sqrt`), and logarithms (`log`).
+- **Memory Management**: Full `M+`, `MR` (Recall), and `MC` (Clear) functionality.
+- **Keyboard Support**: Full integration with the keyboard—press `Enter` to calculate and `Esc` to clear.
+- **Robust Testing**: Comprehensive unit test suite covering edge cases like division by zero and domain errors.
+- **CI/CD Ready**: Automated testing via GitHub Actions on every push.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Python 3**: Core logic and expression evaluation.
+- **Tkinter**: GUI framework for the modern interface.
+- **Unittest**: Framework for ensuring mathematical accuracy.
+- **GitHub Actions**: Automated CI/CD pipeline.
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
-- Python 3.8 or higher
-- Tkinter (usually included with Python)
+- Python 3.10 or higher
 
-## Usage
-Enter expressions directly into the input box.
-Use = to calculate, C to clear, Store to save a variable, and Vars to view stored variables.
-Double-click any entry in the history list to load it back into the input.
-Use ClearHist to reset your history.
+### Installation & Usage
+1. **Clone the repository:**
+    git clone 
+2. **Run the application:**
+    python src/main.py
+3. **Run the tests:**
+    python -m unittest discover tests
 
-### Screenshots / GIF
-Open screenshots folder: Check out demo1, demo2, demo3, demo4 and demo5
-
-## Tech Stack
-Python 3 – Core programming language
-Tkinter – GUI framework
+## 📂 Project Structure
+calculator/
+├── src/
+│   └── main.py          # Logic Engine and GUI classes
+├── tests/
+│   └── test_main.py     # Unit test suite
+├── .github/workflows/   # CI/CD configuration
+└── .gitignore           # Keeps the repo clean
